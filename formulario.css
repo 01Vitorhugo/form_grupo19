@@ -82,3 +82,32 @@ body {
 .btn-submit:hover {
     background-color: #0056b3;
 }
+
+/* ===== Estados do envio ===== */
+.btn-submit:disabled {
+    background-color: #7fb8f5;
+    cursor: not-allowed;
+}
+
+.form-status {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    text-align: center;
+    display: none;
+}
+
+.form-status.sucesso {
+    display: block;
+    background-color: #e6f6ec;
+    color: #1e6b3a;
+    border: 1px solid #b9e3c8;
+}
+
+.form-status.erro {
+    display: block;
+    background-color: #fdecea;
+    color: #a12a22;
+    border: 1px solid #f5c2be;
+}
