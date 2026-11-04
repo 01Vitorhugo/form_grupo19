@@ -8,6 +8,26 @@ const mensagemEl = document.getElementById('mensagem');
 const REGEX_TELEFONE = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 const MIN_MENSAGEM = 10;
 
+const imagemEl = document.getElementById('imagem');
+const BUCKET_IMAGENS = 'imagem-form';
+const MAX_IMAGEM_MB = 5;
+
+// Envia a foto para o bucket e devolve a URL pública
+async function enviarImagem(arquivo) {
+    const ext = arquivo.name.split('.').pop().toLowerCase();
+    const caminho = crypto.randomUUID() + '.' + ext; // nome único, evita conflito e caracteres estranhos
+
+    const { error } = await supabaseClient.storage
+        .from(BUCKET_IMAGENS)
+        .upload(caminho, arquivo, { contentType: arquivo.type, upsert: false });
+    if (error) throw error;
+
+    const { data } = supabaseClient.storage.from(BUCKET_IMAGENS).getPublicUrl(caminho);
+    return data.publicUrl;
+}
+
+
+
 // Máscara: remove tudo que não é número e formata como (00) 00000-0000
 function aplicarMascaraTelefone(valor) {
     const n = valor.replace(/\D/g, '').slice(0, 11);
@@ -87,6 +107,19 @@ form.addEventListener('submit', async (event) => {
         return;
     }
 
+        const arquivo = imagemEl.files[0] || null;
+    if (arquivo) {
+        if (!arquivo.type.startsWith('image/')) {
+            mostrarStatus('erro', 'Envie apenas arquivos de imagem.');
+            return;
+        }
+        if (arquivo.size > MAX_IMAGEM_MB * 1024 * 1024) {
+            mostrarStatus('erro', 'A imagem deve ter no máximo ' + MAX_IMAGEM_MB + ' MB.');
+            return;
+        }
+    }
+
+
     if (!configurado()) {
         mostrarStatus('erro', 'Configure a URL e a chave em supabase-config.js.');
         return;
@@ -103,6 +136,17 @@ form.addEventListener('submit', async (event) => {
     btnEnviar.disabled = true;
     btnEnviar.textContent = 'Enviando...';
     statusEl.className = 'form-status';
+
+       try {
+        if (arquivo) dados.imagem = await enviarImagem(arquivo);
+    } catch (erro) {
+        console.error('Erro no upload da imagem:', erro);
+        mostrarStatus('erro', 'Não foi possível enviar a imagem. Tente novamente.');
+        btnEnviar.disabled = false;
+        btnEnviar.textContent = 'Enviar Mensagem';
+        return;
+    }
+    
 
     // Os dois envios acontecem ao mesmo tempo; um não bloqueia o outro
     const [resSupabase, resWebhook] = await Promise.allSettled([
