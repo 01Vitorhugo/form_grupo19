@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulário</title>
     <link rel="stylesheet" href="formulario.css">
 </head>
+
 <body>
 
     <div class="form-container">
-        <h2>Grupo 19</h2>
+        <h2>GRUPO 19</h2>
         <form id="form-contato" novalidate>
 
             <div class="input-group">
@@ -24,7 +26,9 @@
 
             <div class="input-group">
                 <label for="telefone">Telefone / WhatsApp</label>
-                <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000">
+                <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000" inputmode="numeric"
+                    maxlength="15" pattern="^\(\d{2}\) \d{4,5}-\d{4}$"
+                    title="Use o formato (00) 00000-0000 ou (00) 0000-0000">
             </div>
 
             <div class="input-group">
@@ -40,7 +44,8 @@
 
             <div class="input-group">
                 <label for="mensagem">Mensagem</label>
-                <textarea id="mensagem" name="mensagem" rows="5" placeholder="Escreva sua mensagem aqui..." required></textarea>
+                <textarea id="mensagem" name="mensagem" rows="5" placeholder="Escreva sua mensagem aqui..."
+                    minlength="10" required></textarea>
             </div>
 
             <button type="submit" class="btn-submit" id="btn-enviar">Enviar Mensagem</button>
@@ -58,4 +63,5 @@
     <script src="formulario.js"></script>
 
 </body>
+
 </html>

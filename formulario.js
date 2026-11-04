@@ -2,6 +2,28 @@ const form = document.getElementById('form-contato');
 const btnEnviar = document.getElementById('btn-enviar');
 const statusEl = document.getElementById('form-status');
 
+const telefoneEl = document.getElementById('telefone');
+const mensagemEl = document.getElementById('mensagem');
+
+const REGEX_TELEFONE = /^\(\d{2}\) \d{4,5}-\d{4}$/;
+const MIN_MENSAGEM = 10;
+
+// Máscara: remove tudo que não é número e formata como (00) 00000-0000
+function aplicarMascaraTelefone(valor) {
+    const n = valor.replace(/\D/g, '').slice(0, 11);
+
+    if (n.length > 10) return n.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, '($1) $2-$3');
+    if (n.length > 6) return n.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+    if (n.length > 2) return n.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
+    if (n.length > 0) return '(' + n;
+    return '';
+}
+
+telefoneEl.addEventListener('input', () => {
+    telefoneEl.value = aplicarMascaraTelefone(telefoneEl.value);
+});
+
+
 function mostrarStatus(tipo, texto) {
     statusEl.className = 'form-status ' + tipo;
     statusEl.textContent = texto;
@@ -35,9 +57,9 @@ async function enviarParaWebhook(dados) {
         });
 
         if (!resposta.ok) {
-             console.log(resposta);
+            console.log(resposta);
             throw new Error('Webhook respondeu com status ' + resposta.status);
-           
+
         }
     } finally {
         clearTimeout(timeout);
@@ -49,6 +71,21 @@ form.addEventListener('submit', async (event) => {
 
     // Validação nativa do navegador (o form usa novalidate)
     if (!form.reportValidity()) return;
+
+    // Telefone é opcional, mas se for preenchido precisa estar completo
+    const telefone = form.telefone.value.trim();
+    if (telefone && !REGEX_TELEFONE.test(telefone)) {
+        mostrarStatus('erro', 'Telefone inválido. Use o formato (00) 00000-0000.');
+        telefoneEl.focus();
+        return;
+    }
+
+    // Mensagem com no mínimo 10 caracteres (sem contar espaços nas pontas)
+    if (form.mensagem.value.trim().length < MIN_MENSAGEM) {
+        mostrarStatus('erro', 'A mensagem deve ter no mínimo ' + MIN_MENSAGEM + ' caracteres.');
+        mensagemEl.focus();
+        return;
+    }
 
     if (!configurado()) {
         mostrarStatus('erro', 'Configure a URL e a chave em supabase-config.js.');
