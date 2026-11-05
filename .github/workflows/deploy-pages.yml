@@ -44,6 +44,11 @@ jobs:
           cp formulario.html formulario.css formulario.js supabase-config.js env.js _site/
           cp formulario.html _site/index.html
 
+      # Troca "?v=dev" pelo commit: cada publicação muda os links do CSS/JS
+      # e o navegador busca os arquivos novos em vez de usar o cache.
+      - name: Versionar CSS e JS
+        run: sed -i "s/?v=dev/?v=${GITHUB_SHA::7}/g" _site/formulario.html _site/index.html
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
