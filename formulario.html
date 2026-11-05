@@ -49,6 +49,12 @@
 
         <form id="form-contato" novalidate>
 
+            <!-- Campo isca contra robôs: escondido de pessoas; se vier preenchido, o envio é descartado -->
+            <div class="campo-isca" aria-hidden="true">
+                <label for="website">Não preencha este campo</label>
+                <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+            </div>
+
             <div class="form-grid">
 
                 <div class="input-group full">
@@ -89,7 +95,7 @@
 
                 <div class="input-group full">
                     <label for="imagem">Imagem <small>(opcional)</small></label>
-                    <input type="file" name="imagem" id="imagem" class="file-input" accept="image/*">
+                    <input type="file" name="imagem" id="imagem" class="file-input" accept="image/jpeg,image/png,image/webp">
                     <label for="imagem" class="file-drop">
                         <span class="file-drop-icon" aria-hidden="true">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -117,13 +123,11 @@
         <p class="form-footer">Grupo 19 · seus dados são usados apenas para retornar o contato.</p>
     </main>
 
-    <!-- 1. Biblioteca do Supabase (versão fixa) -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-    <!-- 2. Variáveis do .env (gerado por "node gerar-env.js") -->
+    <!-- 1. Variáveis do .env (gerado por "node gerar-env.js") -->
     <script src="env.js?v=dev"></script>
-    <!-- 3. Configuração do Supabase e do webhook -->
+    <!-- 2. Endereço da função de envio e do webhook -->
     <script src="supabase-config.js?v=dev"></script>
-    <!-- 4. Lógica do formulário -->
+    <!-- 3. Lógica do formulário -->
     <script src="formulario.js?v=dev"></script>
 
 </body>

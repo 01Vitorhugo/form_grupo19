@@ -34,8 +34,6 @@ jobs:
         run: node gerar-env.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          SUPABASE_TABELA: ${{ secrets.SUPABASE_TABELA }}
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
 
       - name: Montar pasta do site

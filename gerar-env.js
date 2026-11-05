@@ -9,7 +9,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const CHAVES = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_TABELA', 'WEBHOOK_URL'];
+// O site não usa chave do banco: só o endereço do Supabase (para chamar a função de envio)
+const CHAVES = ['SUPABASE_URL', 'WEBHOOK_URL'];
 const arquivoEnv = path.join(__dirname, '.env');
 
 const env = {};
