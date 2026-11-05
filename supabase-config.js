@@ -1,19 +1,16 @@
 // ============================================================
-// Configuração do Supabase
-// Painel do Supabase > Project Settings > API
+// Configuração do Supabase e do webhook
+// Os valores vêm do .env (via env.js, gerado por "node gerar-env.js").
+// Nunca coloque chaves diretamente neste arquivo.
 // ============================================================
 
-// "Project URL"
-const SUPABASE_URL = 'https://bbeexsemmmbmtoznsvfb.supabase.co';
+const ENV = window.ENV || {};
 
-// Chave "anon" / "publishable" (pública, protegida pelas regras RLS).
-// NUNCA coloque aqui a chave "service_role".
-const SUPABASE_ANON_KEY = 'sb_publishable_jA7Tlodfj-9PWA9YbfqGSg__C7yqI1H';
+const SUPABASE_URL = ENV.SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = ENV.SUPABASE_ANON_KEY || '';
+const SUPABASE_TABELA = ENV.SUPABASE_TABELA || 'contatos';
+const WEBHOOK_URL = ENV.WEBHOOK_URL || '';
 
-// Nome da tabela onde as mensagens serão salvas
-const SUPABASE_TABELA = 'contatos';
-
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// URL do webhook que também recebe os dados do formulário
-const WEBHOOK_URL = 'https://hooks.grupo19.app/webhook/recebe_formulario';
+const supabaseClient = SUPABASE_URL && SUPABASE_ANON_KEY
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;

@@ -28,9 +28,14 @@ async function enviarImagem(arquivo) {
 
 
 
+// Remove tudo que não é número: "(11) 98765-4321" -> "11987654321"
+function somenteDigitos(valor) {
+    return valor.replace(/\D/g, '');
+}
+
 // Máscara: remove tudo que não é número e formata como (00) 00000-0000
 function aplicarMascaraTelefone(valor) {
-    const n = valor.replace(/\D/g, '').slice(0, 11);
+    const n = somenteDigitos(valor).slice(0, 11);
 
     if (n.length > 10) return n.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, '($1) $2-$3');
     if (n.length > 6) return n.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
@@ -50,7 +55,7 @@ function mostrarStatus(tipo, texto) {
 }
 
 function configurado() {
-    return !SUPABASE_URL.includes('SEU-PROJETO') && !SUPABASE_ANON_KEY.includes('SUA-CHAVE');
+    return supabaseClient !== null && !SUPABASE_URL.includes('SEU-PROJETO') && !SUPABASE_ANON_KEY.includes('SUA-CHAVE');
 }
 
 // Salva a mensagem na tabela do Supabase
@@ -121,14 +126,15 @@ form.addEventListener('submit', async (event) => {
 
 
     if (!configurado()) {
-        mostrarStatus('erro', 'Configure a URL e a chave em supabase-config.js.');
+        mostrarStatus('erro', 'Configure o .env e rode "node gerar-env.js".');
         return;
     }
 
     const dados = {
         nome: form.nome.value.trim(),
         email: form.email.value.trim(),
-        telefone: form.telefone.value.trim() || null,
+        // A máscara é só visual: para o banco e o webhook vão apenas os dígitos
+        telefone: somenteDigitos(form.telefone.value) || null,
         assunto: form.assunto.value,
         mensagem: form.mensagem.value.trim(),
     };

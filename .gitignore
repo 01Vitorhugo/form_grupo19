@@ -1,0 +1,13 @@
+# Variáveis de ambiente (chaves e URLs reais)
+.env
+.env.*
+!.env.example
+
+# Gerado a partir do .env por gerar-env.js
+env.js
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.vscode/
+node_modules/
