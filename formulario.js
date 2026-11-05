@@ -11,6 +11,23 @@ const MIN_MENSAGEM = 10;
 const imagemEl = document.getElementById('imagem');
 const BUCKET_IMAGENS = 'imagem-form';
 const MAX_IMAGEM_MB = 5;
+const imagemNomeEl = document.getElementById('imagem-nome');
+const TEXTO_IMAGEM_VAZIA = 'Escolher imagem';
+
+// Tema claro/escuro: mesmo cookie dos apps G19 (g19_theme), vale por 1 ano
+document.getElementById('theme-switch').addEventListener('click', () => {
+    const claro = document.documentElement.dataset.theme !== 'light';
+    if (claro) document.documentElement.dataset.theme = 'light';
+    else delete document.documentElement.dataset.theme;
+    document.cookie = 'g19_theme=' + (claro ? 'light' : 'dark') + '; path=/; max-age=31536000; SameSite=Lax';
+});
+
+// Mostra o nome da imagem escolhida no campo
+function atualizarNomeImagem() {
+    const arquivo = imagemEl.files[0];
+    imagemNomeEl.textContent = arquivo ? arquivo.name : TEXTO_IMAGEM_VAZIA;
+}
+imagemEl.addEventListener('change', atualizarNomeImagem);
 
 // Envia a foto para o bucket e devolve a URL pública
 async function enviarImagem(arquivo) {
@@ -149,7 +166,7 @@ form.addEventListener('submit', async (event) => {
         console.error('Erro no upload da imagem:', erro);
         mostrarStatus('erro', 'Não foi possível enviar a imagem. Tente novamente.');
         btnEnviar.disabled = false;
-        btnEnviar.textContent = 'Enviar Mensagem';
+        btnEnviar.textContent = 'Enviar mensagem';
         return;
     }
     
@@ -170,8 +187,9 @@ form.addEventListener('submit', async (event) => {
     } else {
         mostrarStatus('sucesso', 'Mensagem enviada com sucesso!');
         form.reset();
+        atualizarNomeImagem();
     }
 
     btnEnviar.disabled = false;
-    btnEnviar.textContent = 'Enviar Mensagem';
+    btnEnviar.textContent = 'Enviar mensagem';
 });
