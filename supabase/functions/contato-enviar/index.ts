@@ -21,7 +21,7 @@ const API = Deno.env.get("SUPABASE_URL")!; // http://api-gw:8000 (rede interna)
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SEGREDO = new TextEncoder().encode(Deno.env.get("JWT_SECRET")!);
 
-const ORIGENS = [/^https:\/\/01vitorhugo\.github\.io$/, /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/];
+const ORIGENS = [/^https:\/\/grupo-19-dev\.github\.io$/, /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/];
 const BUCKET = "contato-imagens";
 const MAX_IMAGEM = 5 * 1024 * 1024;
 const TIPOS: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
