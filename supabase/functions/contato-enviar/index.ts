@@ -1,4 +1,5 @@
-// contato-enviar: recebe o formulário de contato (site estático no GitHub Pages) e grava no
+// contato-enviar: recebe o formulário de contato (site estático em formulario.grupo19.app
+// e no GitHub Pages) e grava no
 // schema contato do Supabase do Grupo19, com a foto no bucket privado contato-imagens.
 //
 // Publicada em /opt/supabase-project/volumes/functions/contato-enviar/ na VPS charlie
@@ -21,7 +22,11 @@ const API = Deno.env.get("SUPABASE_URL")!; // http://api-gw:8000 (rede interna)
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SEGREDO = new TextEncoder().encode(Deno.env.get("JWT_SECRET")!);
 
-const ORIGENS = [/^https:\/\/grupo-19-dev\.github\.io$/, /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/];
+const ORIGENS = [
+  /^https:\/\/formulario\.grupo19\.app$/, // VPS g19-apps-prod
+  /^https:\/\/grupo-19-dev\.github\.io$/, // GitHub Pages
+  /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/,
+];
 const BUCKET = "contato-imagens";
 const MAX_IMAGEM = 5 * 1024 * 1024;
 const TIPOS: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };

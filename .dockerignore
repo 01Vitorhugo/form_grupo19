@@ -1,0 +1,15 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+env.js
+node_modules
+db
+supabase
+docs
+*.md
+compose.yaml
+.vscode
+.DS_Store
+Thumbs.db

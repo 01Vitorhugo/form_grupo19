@@ -1,0 +1,5 @@
+# Arquivos que rodam dentro do container Linux: sempre com fim de linha LF
+*.sh text eol=lf
+deploy/nginx.conf text eol=lf
+Dockerfile text eol=lf
+compose.yaml text eol=lf
