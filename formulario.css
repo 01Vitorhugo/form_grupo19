@@ -424,3 +424,12 @@ textarea {
         transition: none !important;
     }
 }
+
+/* Campo isca contra robôs: fora da tela para pessoas, visível para robôs que leem o HTML */
+.campo-isca {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}

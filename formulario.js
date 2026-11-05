@@ -9,7 +9,7 @@ const REGEX_TELEFONE = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 const MIN_MENSAGEM = 10;
 
 const imagemEl = document.getElementById('imagem');
-const BUCKET_IMAGENS = 'imagem-form';
+const TIPOS_IMAGEM = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_IMAGEM_MB = 5;
 const imagemNomeEl = document.getElementById('imagem-nome');
 const TEXTO_IMAGEM_VAZIA = 'Escolher imagem';
@@ -28,20 +28,6 @@ function atualizarNomeImagem() {
     imagemNomeEl.textContent = arquivo ? arquivo.name : TEXTO_IMAGEM_VAZIA;
 }
 imagemEl.addEventListener('change', atualizarNomeImagem);
-
-// Envia a foto para o bucket e devolve a URL pública
-async function enviarImagem(arquivo) {
-    const ext = arquivo.name.split('.').pop().toLowerCase();
-    const caminho = crypto.randomUUID() + '.' + ext; // nome único, evita conflito e caracteres estranhos
-
-    const { error } = await supabaseClient.storage
-        .from(BUCKET_IMAGENS)
-        .upload(caminho, arquivo, { contentType: arquivo.type, upsert: false });
-    if (error) throw error;
-
-    const { data } = supabaseClient.storage.from(BUCKET_IMAGENS).getPublicUrl(caminho);
-    return data.publicUrl;
-}
 
 
 
@@ -72,14 +58,29 @@ function mostrarStatus(tipo, texto) {
 }
 
 function configurado() {
-    return supabaseClient !== null && !SUPABASE_URL.includes('SEU-PROJETO') && !SUPABASE_ANON_KEY.includes('SUA-CHAVE');
+    return FUNCAO_ENVIO_URL !== '' && !SUPABASE_URL.includes('SEU-PROJETO');
 }
 
-// Salva a mensagem na tabela do Supabase
-async function salvarNoSupabase(dados) {
-    // Sem .select() de propósito: a política RLS só permite INSERT para anônimos
-    const { error } = await supabaseClient.from(SUPABASE_TABELA).insert(dados);
-    if (error) throw error;
+// Envia o formulário (com a foto, se houver) para a função do Supabase do G19,
+// que valida e grava. Devolve { id, imagem_url? } — imagem_url é um link temporário.
+async function salvarNoSupabase(dados, arquivo) {
+    const corpo = new FormData();
+    for (const [campo, valor] of Object.entries(dados)) {
+        if (valor) corpo.append(campo, valor);
+    }
+    corpo.append('website', form.website.value); // campo isca contra robôs
+    if (arquivo) corpo.append('imagem', arquivo);
+
+    const resposta = await fetch(FUNCAO_ENVIO_URL, { method: 'POST', body: corpo });
+    let retorno = {};
+    try { retorno = await resposta.json(); } catch { /* resposta sem JSON */ }
+
+    if (!resposta.ok || !retorno.ok) {
+        const erro = new Error(retorno.erro || 'Função respondeu com status ' + resposta.status);
+        erro.status = resposta.status;
+        throw erro;
+    }
+    return retorno;
 }
 
 // Envia os mesmos dados para o webhook (com limite de 10 segundos)
@@ -131,8 +132,8 @@ form.addEventListener('submit', async (event) => {
 
         const arquivo = imagemEl.files[0] || null;
     if (arquivo) {
-        if (!arquivo.type.startsWith('image/')) {
-            mostrarStatus('erro', 'Envie apenas arquivos de imagem.');
+        if (!TIPOS_IMAGEM.includes(arquivo.type)) {
+            mostrarStatus('erro', 'Envie uma imagem JPG, PNG ou WEBP.');
             return;
         }
         if (arquivo.size > MAX_IMAGEM_MB * 1024 * 1024) {
@@ -160,27 +161,38 @@ form.addEventListener('submit', async (event) => {
     btnEnviar.textContent = 'Enviando...';
     statusEl.className = 'form-status';
 
-       try {
-        if (arquivo) dados.imagem = await enviarImagem(arquivo);
+    // 1. Banco (com a foto). O resultado traz o id e o link temporário da foto.
+    let salvo = null;
+    let erroBanco = null;
+    try {
+        salvo = await salvarNoSupabase(dados, arquivo);
     } catch (erro) {
-        console.error('Erro no upload da imagem:', erro);
-        mostrarStatus('erro', 'Não foi possível enviar a imagem. Tente novamente.');
+        erroBanco = erro;
+        console.error('Erro no Supabase:', erro);
+    }
+
+    // Erros de validação ou excesso de envios: mostra o motivo e não manda ao webhook
+    if (erroBanco && (erroBanco.status === 400 || erroBanco.status === 429)) {
+        mostrarStatus('erro', erroBanco.message);
         btnEnviar.disabled = false;
         btnEnviar.textContent = 'Enviar mensagem';
         return;
     }
-    
 
-    // Os dois envios acontecem ao mesmo tempo; um não bloqueia o outro
-    const [resSupabase, resWebhook] = await Promise.allSettled([
-        salvarNoSupabase(dados),
-        enviarParaWebhook(dados),
-    ]);
+    // 2. Webhook (n8n): recebe os mesmos dados, mais o id e o link da foto quando o banco gravou
+    let erroWebhook = null;
+    try {
+        await enviarParaWebhook({
+            ...dados,
+            id: salvo?.id ?? null,
+            imagem: salvo?.imagem_url ?? null,
+        });
+    } catch (erro) {
+        erroWebhook = erro;
+        console.error('Erro no webhook:', erro);
+    }
 
-    if (resSupabase.status === 'rejected') console.error('Erro no Supabase:', resSupabase.reason);
-    if (resWebhook.status === 'rejected') console.error('Erro no webhook:', resWebhook.reason);
-
-    const ambosFalharam = resSupabase.status === 'rejected' && resWebhook.status === 'rejected';
+    const ambosFalharam = erroBanco && erroWebhook;
 
     if (ambosFalharam) {
         mostrarStatus('erro', 'Não foi possível enviar. Tente novamente em instantes.');
