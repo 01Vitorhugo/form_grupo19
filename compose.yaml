@@ -1,0 +1,41 @@
+# Stack de deploy — VPS g19-apps-prod (159.195.8.21), em /opt/docker/stacks/g19-formulario/
+#
+# Site estático (nginx), sem banco e sem túnel: o navegador fala com a Edge Function
+# contato-enviar (https://supabase.grupo19.app) e com o webhook do n8n.
+# A rede externa `proxy` é a do Traefik compartilhado.
+# DNS: formulario.grupo19.app -> 159.195.8.21 (registro A, somente DNS / nuvem cinza).
+#
+# Ao lado deste arquivo, no host (git-ignored): .env com SUPABASE_URL e WEBHOOK_URL
+# (modelo em .env.example). Passo a passo: docs/deploy.md.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: g19-formulario:local
+    container_name: g19-formulario
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "8080"
+    networks:
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.g19-formulario.entrypoints=websecure"
+      - "traefik.http.routers.g19-formulario.rule=Host(`formulario.grupo19.app`)"
+      - "traefik.http.routers.g19-formulario.tls=true"
+      - "traefik.http.routers.g19-formulario.tls.certresolver=letsencrypt"
+      - "traefik.http.services.g19-formulario.loadbalancer.server.port=8080"
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+networks:
+  proxy:
+    external: true
