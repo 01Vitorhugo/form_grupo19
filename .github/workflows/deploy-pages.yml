@@ -1,0 +1,54 @@
+# Publica o formulário no GitHub Pages.
+# Gera o env.js com os Secrets do repositório (Settings > Secrets and variables > Actions),
+# assim as chaves não ficam no código.
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Gerar env.js a partir dos Secrets
+        run: node gerar-env.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_TABELA: ${{ secrets.SUPABASE_TABELA }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+
+      - name: Montar pasta do site
+        run: |
+          mkdir _site
+          cp formulario.html formulario.css formulario.js supabase-config.js env.js _site/
+          cp formulario.html _site/index.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
